@@ -1,0 +1,61 @@
+
+//+------------------------------------------------------------------+
+//|                                                   Assassin Trading Assistant           |
+//|                                      Developer's site: forexroboteasy.com             |
+//|                                        Developed by: Forex Robot Easy Team           |
+//+------------------------------------------------------------------+
+
+// Define input parameters
+input int fastPeriod = 10; // Fast moving average period
+input int slowPeriod = 20; // Slow moving average period
+
+// Define global variables
+double fastMA; // Fast moving average value
+double slowMA; // Slow moving average value
+
+// Initialize expert advisor
+int OnInit()
+{
+    // Calculate initial moving averages
+    fastMA = iMA(NULL, 0, fastPeriod, 0, MODE_SMMA, PRICE_CLOSE, 0);
+    slowMA = iMA(NULL, 0, slowPeriod, 0, MODE_SMMA, PRICE_CLOSE, 0);
+    
+    return(INIT_SUCCEEDED);
+}
+
+// Start trading
+void OnTick()
+{
+    // Calculate current moving averages
+    fastMA = iMA(NULL, 0, fastPeriod, 0, MODE_SMMA, PRICE_CLOSE, 0);
+    slowMA = iMA(NULL, 0, slowPeriod, 0, MODE_SMMA, PRICE_CLOSE, 0);
+    
+    // Check for potential trade setup
+    if (fastMA > slowMA)
+    {
+        // Execute trade entry
+        OrderSend(Symbol(), OP_BUY, 1, Ask, 0, 0, 0, '', MagicNumber, 0, Green);
+    }
+    else if (fastMA < slowMA)
+    {
+        // Execute trade exit
+        OrderSend(Symbol(), OP_SELL, 1, Bid, 0, 0, 0, '', MagicNumber, 0, Red);
+    }
+}
+
+// End trading
+void OnDeinit(const int reason)
+{
+    // Close any open trades
+    for (int i = OrdersTotal() - 1; i >= 0; i--)
+    {
+        if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+        {
+            if (OrderSymbol() == Symbol() && OrderMagicNumber() == MagicNumber)
+            {
+                // Close the order
+                OrderClose(OrderTicket(), OrderLots(), OrderClosePrice(), 0, Red);
+            }
+        }
+    }
+}
